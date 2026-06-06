@@ -79,6 +79,9 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   position: relative;
+  /* THIS is the key fix: transform creates a new containing block for
+     position:fixed children, so modals/toasts stay inside the frame */
+  transform: translateZ(0);
   box-shadow:
     0 0 0 8px #0d0d14,
     0 0 0 9px rgba(124,58,237,0.15),
