@@ -1,28 +1,50 @@
-name: CI
+name: MERN CI/CD Pipeline
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted
 
-        steps:
-        - name: Checkout code
-            uses: actions/checkout@v2
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-        - name: Set up Node.js
-            uses: actions/setup-node@v2
-            with:
-                node-version: '14'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
 
-        - name: Install dependencies
-            run: npm install
+      - name: Print Environment Secrets
+        run: |
+          echo "MONGO_URI: ${{ secrets.MONGO_URI }}"
+          echo "JWT_SECRET: ${{ secrets.JWT_SECRET }}"
+          echo "PORT: ${{ secrets.PORT }}"
 
-        - name: Run tests
-            run: npm test
+      - name: Stop running PM2 services
+        run: |
+          pm2 stop all || true
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          yarn install
+
+      - name: Install Frontend Dependencies & Build
+        run: |
+          cd frontend
+          yarn install
+          yarn run build
+
+      - name: Run Backend Mocha/Chai Tests
+        run: |
+          cd backend
+          npm test
+
+      - name: Start and Restart PM2 Services
+        run: |
+          pm2 start all || pm2 start backend/server.js --name "parking-backend"
+          pm2 restart all
