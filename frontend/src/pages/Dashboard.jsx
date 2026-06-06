@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Car, MapPin, DollarSign, Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Car, MapPin, Calendar, Clock, CheckCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
