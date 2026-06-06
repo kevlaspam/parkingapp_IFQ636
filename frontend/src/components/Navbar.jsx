@@ -12,35 +12,32 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-slate-900 border-b border-slate-800 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-xl font-bold flex items-center gap-2 hover:text-indigo-400 transition">
-        <Car size={24} className="text-indigo-500" />
+    <nav className="bg-slate-900 border-b border-slate-800 text-white p-4 pt-8 flex justify-between items-center z-40 select-none">
+      <Link to="/" className="text-md font-bold flex items-center gap-1.5 hover:text-indigo-400 transition">
+        <Car size={18} className="text-indigo-500" />
         <span>Parking Booking</span>
       </Link>
-      <div className="flex items-center gap-2 sm:gap-4 text-sm font-medium">
+      <div className="flex items-center gap-2 text-xs font-semibold">
         {user ? (
           <>
-            <Link to="/dashboard" className="hover:text-indigo-400 transition">Dashboard</Link>
-            <Link to="/bookings" className="hover:text-indigo-400 transition">My Bookings</Link>
+            <Link to="/dashboard" className="hover:text-indigo-400 transition">Slots</Link>
+            <Link to="/bookings" className="hover:text-indigo-400 transition">Bookings</Link>
             {user.role === 'admin' && (
               <Link to="/admin" className="hover:text-indigo-400 transition">Admin</Link>
             )}
-            <Link to="/figma" className="text-amber-400 hover:text-amber-300 transition font-bold">Figma Simulator</Link>
-            <Link to="/profile" className="hover:text-indigo-400 transition">Profile</Link>
             <button
               onClick={handleLogout}
-              className="bg-indigo-600 px-4 py-1.5 rounded-xl font-bold hover:bg-indigo-700 transition"
+              className="bg-indigo-600 px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition"
             >
               Logout
             </button>
           </>
         ) : (
           <>
-            <Link to="/figma" className="text-amber-400 hover:text-amber-300 transition font-bold mr-2">Figma Simulator</Link>
-            <Link to="/login" className="hover:text-indigo-400 transition mr-2">Login</Link>
+            <Link to="/login" className="hover:text-indigo-400 transition mr-1">Login</Link>
             <Link
               to="/register"
-              className="bg-indigo-600 px-4 py-1.5 rounded-xl font-bold hover:bg-indigo-700 transition"
+              className="bg-indigo-600 px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition"
             >
               Register
             </Link>
