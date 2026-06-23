@@ -9,6 +9,21 @@ export default function Dashboard() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingSlot, setBookingSlot] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+
+  const getSlotCategory = (location) => {
+    if (!location) return { label: 'Unknown', className: 'badge-muted' };
+    if (location.includes('Gardens Point')) {
+      return { label: 'QUT GP', className: 'badge-violet' };
+    }
+    if (location.includes('Kelvin Grove')) {
+      return { label: 'QUT KG', className: 'badge-blue' };
+    }
+    if (location.includes('Council Partner')) {
+      return { label: 'BCC Partner', className: 'badge-green' };
+    }
+    return { label: 'Off-Campus', className: 'badge-muted' };
+  };
 
   const getLocalDateString = () => {
     const d = new Date();
@@ -96,10 +111,16 @@ export default function Dashboard() {
 
   const firstName = user?.name?.split(' ')[0] || 'there';
 
-  const filteredSlots = slots.filter(s =>
-    s.slotNumber?.toLowerCase().includes(search.toLowerCase()) ||
-    s.location?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredSlots = slots.filter(s => {
+    if (activeTab === 'gp' && !s.location?.includes('Gardens Point')) return false;
+    if (activeTab === 'kg' && !s.location?.includes('Kelvin Grove')) return false;
+    if (activeTab === 'suburbs' && !s.location?.includes('Council Partner')) return false;
+
+    return (
+      s.slotNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      s.location?.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   if (loading) {
     return (
@@ -151,6 +172,36 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Campus Filtering Tabs */}
+      <div className="filter-tabs" style={{ display: 'flex', gap: 8, margin: '14px 0', overflowX: 'auto', paddingBottom: 4 }}>
+        {[
+          { id: 'all', label: 'All Parks' },
+          { id: 'gp', label: 'Gardens Point' },
+          { id: 'kg', label: 'Kelvin Grove' },
+          { id: 'suburbs', label: 'BCC Suburbs' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`btn-tab ${activeTab === tab.id ? 'active' : ''}`}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-full)',
+              border: activeTab === tab.id ? '1px solid var(--accent)' : '1px solid var(--border)',
+              background: activeTab === tab.id ? 'var(--accent)' : 'var(--bg-card)',
+              color: activeTab === tab.id ? 'var(--text-inverse)' : 'var(--text-secondary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Slot list */}
       <p className="section-label">Available Parking</p>
       <div className="slots-grid">
@@ -169,7 +220,12 @@ export default function Dashboard() {
             >
               <div className="slot-icon">🚗</div>
               <div className="slot-info">
-                <div className="slot-number">Slot {slot.slotNumber}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="slot-number">Slot {slot.slotNumber}</span>
+                  <span className={`badge ${getSlotCategory(slot.location).className}`}>
+                    {getSlotCategory(slot.location).label}
+                  </span>
+                </div>
                 <div className="slot-location">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', marginRight: 3, verticalAlign: 'middle' }}>
                     <path d="M20 10c0 6-8 13-8 13s-8-7-8-13a8 8 0 0 1 16 0Z"/>

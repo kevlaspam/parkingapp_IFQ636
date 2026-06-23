@@ -400,6 +400,12 @@ html, body, #root {
   border: 1px solid rgba(245,158,11,0.2);
 }
 
+.badge-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 /* ===== AUTH PAGES ===== */
 .auth-page {
   min-height: 100%;
