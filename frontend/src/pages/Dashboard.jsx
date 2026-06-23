@@ -9,8 +9,18 @@ export default function Dashboard() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingSlot, setBookingSlot] = useState(null);
+
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayString = getLocalDateString();
+
   const [bookingDetails, setBookingDetails] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: todayString,
     startTime: '09:00',
     endTime: '12:00'
   });
@@ -46,6 +56,18 @@ export default function Dashboard() {
     try {
       const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}:00`);
       const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}:00`);
+
+      const now = new Date();
+      if (startDateTime < now) {
+        setToast('⚠️ Start time must be in the future!');
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+      if (endDateTime <= startDateTime) {
+        setToast('⚠️ End time must be after start time!');
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
 
       await axiosInstance.post(
         '/api/bookings',
@@ -187,6 +209,7 @@ export default function Dashboard() {
                 <input
                   type="date"
                   required
+                  min={todayString}
                   value={bookingDetails.date}
                   onChange={(e) => setBookingDetails({ ...bookingDetails, date: e.target.value })}
                   className="input"

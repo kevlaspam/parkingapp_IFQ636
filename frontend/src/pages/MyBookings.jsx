@@ -11,6 +11,7 @@ export default function MyBookings() {
   const [editingBooking, setEditingBooking] = useState(null);
   const [editTimes, setEditTimes] = useState({ startTime: '', endTime: '' });
   const [toast, setToast] = useState(null);
+  const [cancellingBooking, setCancellingBooking] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -72,6 +73,16 @@ export default function MyBookings() {
         : new Date().toISOString().split('T')[0];
       const startDateTime = new Date(`${dateStr}T${editTimes.startTime}:00`);
       const endDateTime = new Date(`${dateStr}T${editTimes.endTime}:00`);
+
+      const now = new Date();
+      if (startDateTime < now) {
+        showToast('Start time must be in the future', true);
+        return;
+      }
+      if (endDateTime <= startDateTime) {
+        showToast('End time must be after start time', true);
+        return;
+      }
 
       const res = await axiosInstance.put(
         `/api/bookings/${editingBooking._id}`,
@@ -216,7 +227,7 @@ export default function MyBookings() {
                   <button
                     className="btn btn-danger btn-sm"
                     style={{ flex: 1 }}
-                    onClick={() => handleCancelBooking(booking._id)}
+                    onClick={() => setCancellingBooking(booking)}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
@@ -273,6 +284,41 @@ export default function MyBookings() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Bottom Sheet */}
+      {cancellingBooking && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setCancellingBooking(null); }}>
+          <div className="bottom-sheet">
+            <div className="sheet-handle"></div>
+            <h2 className="sheet-title" style={{ color: 'var(--red)' }}>Cancel Trip?</h2>
+            <p className="sheet-subtitle">
+              Are you sure you want to cancel your booking for <strong>Slot {cancellingBooking.parkingSlot?.slotNumber}</strong>? This action cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+                onClick={() => setCancellingBooking(null)}
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  handleCancelBooking(cancellingBooking._id);
+                  setCancellingBooking(null);
+                }}
+              >
+                Confirm Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
