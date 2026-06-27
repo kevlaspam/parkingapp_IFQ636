@@ -49,6 +49,7 @@ const Navbar = () => {
     tabs.splice(2, 0, {
       to: '/admin',
       label: 'Admin',
+      className: 'admin-tab',
       icon: (active) => (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -64,7 +65,7 @@ const Navbar = () => {
       {tabs.map((tab) => {
         const active = location.pathname === tab.to;
         return (
-          <Link key={tab.to} to={tab.to} className={`nav-tab${active ? ' active' : ''}`}>
+          <Link key={tab.to} to={tab.to} className={`nav-tab${active ? ' active' : ''}${tab.className ? ' ' + tab.className : ''}`}>
             <div className="nav-icon">{tab.icon(active)}</div>
             {tab.label}
           </Link>

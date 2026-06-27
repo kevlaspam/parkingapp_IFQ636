@@ -207,9 +207,18 @@ html, body, #root {
   color: var(--accent-light);
 }
 
+.nav-tab.active.admin-tab {
+  color: var(--amber);
+}
+
 .nav-tab.active .nav-icon {
   background: var(--accent-dim);
   color: var(--accent-light);
+}
+
+.nav-tab.active.admin-tab .nav-icon {
+  background: var(--amber-dim);
+  color: var(--amber);
 }
 
 .nav-icon {

@@ -127,7 +127,7 @@ export default function AdminPanel() {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <Shield size={28} className="text-indigo-600" />
+                <Shield size={28} style={{ color: 'var(--amber)' }} />
                 Admin Slot Management
               </h1>
               <p className="text-slate-500 mt-1">Add, update, or remove parking slots in the MongoDB registry.</p>
@@ -136,7 +136,8 @@ export default function AdminPanel() {
 
           <button
             onClick={handleOpenAdd}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-md flex items-center gap-2"
+            className="font-semibold py-2.5 px-5 rounded-xl transition shadow-md flex items-center gap-2"
+            style={{ backgroundColor: 'var(--amber)', color: '#000', cursor: 'pointer' }}
           >
             <Plus size={18} />
             Add New Slot
@@ -176,7 +177,8 @@ export default function AdminPanel() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
                       onClick={() => handleOpenEdit(slot)}
-                      className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 p-1.5 rounded-lg text-slate-600 hover:text-slate-800 transition"
+                      className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 p-1.5 rounded-lg transition"
+                      style={{ color: 'var(--amber)', cursor: 'pointer' }}
                     >
                       <Edit2 size={14} />
                     </button>
@@ -207,7 +209,7 @@ export default function AdminPanel() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all animate-scale-up">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Shield className="text-indigo-600" size={24} />
+                <Shield style={{ color: 'var(--amber)' }} size={24} />
                 {isEditing ? 'Modify Slot' : 'Add Parking Slot'}
               </h2>
               <button onClick={() => setModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition">
@@ -263,7 +265,8 @@ export default function AdminPanel() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl transition shadow-md"
+                  className="flex-1 font-semibold py-2.5 px-4 rounded-xl transition shadow-md"
+                  style={{ backgroundColor: 'var(--amber)', color: '#000', cursor: 'pointer' }}
                 >
                   {isEditing ? 'Save Changes' : 'Create Slot'}
                 </button>

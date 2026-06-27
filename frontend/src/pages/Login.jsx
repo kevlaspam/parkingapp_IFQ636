@@ -14,6 +14,26 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    const emailVal = formData.email.trim();
+    const passwordVal = formData.password.trim();
+
+    // Check for hardcoded admin/admin login
+    if (emailVal.toLowerCase() === 'admin' && passwordVal === 'admin') {
+      setTimeout(() => {
+        login({
+          id: 'admin-built-in',
+          name: 'System Admin',
+          email: 'admin@parkease.com',
+          role: 'admin',
+          token: 'mock-jwt-token-for-admin'
+        });
+        navigate('/admin');
+        setLoading(false);
+      }, 500);
+      return;
+    }
+
     try {
       const response = await axiosInstance.post('/api/auth/login', formData);
       login(response.data);
@@ -55,12 +75,12 @@ const Login = () => {
           )}
 
           <div className="input-group">
-            <label className="input-label">Email address</label>
+            <label className="input-label">Email or Username</label>
             <input
               id="login-email"
-              type="email"
+              type="text"
               required
-              placeholder="you@university.edu"
+              placeholder="you@university.edu or 'admin'"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="input"
