@@ -34,6 +34,22 @@ const Login = () => {
       return;
     }
 
+    // Check for hardcoded student/student login
+    if (emailVal.toLowerCase() === 'student' && passwordVal === 'student') {
+      setTimeout(() => {
+        login({
+          id: 'student-built-in',
+          name: 'Student User',
+          email: 'student@parkease.com',
+          role: 'user',
+          token: 'mock-jwt-token-for-student'
+        });
+        navigate('/dashboard');
+        setLoading(false);
+      }, 500);
+      return;
+    }
+
     try {
       const response = await axiosInstance.post('/api/auth/login', formData);
       login(response.data);
@@ -80,7 +96,7 @@ const Login = () => {
               id="login-email"
               type="text"
               required
-              placeholder="you@university.edu or 'admin'"
+              placeholder="you@university.edu, 'admin' or 'student'"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="input"
