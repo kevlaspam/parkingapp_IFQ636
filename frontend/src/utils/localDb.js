@@ -43,15 +43,17 @@ const DEFAULT_BOOKINGS = [
     _id: 'local-b1',
     user: 'student-built-in',
     parkingSlot: { slotNumber: 'GP-D9', location: 'QUT Gardens Point - Library V-Block', pricePerHour: 5.00 },
-    startTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-    endTime: new Date(Date.now() + 14400000).toISOString() // 4 hours from now
+    startTime: new Date(Date.now() + 3600000).toISOString(),
+    endTime: new Date(Date.now() + 14400000).toISOString(),
+    licensePlate: 'QUT-999'
   },
   {
     _id: 'local-b2',
     user: 'student-built-in',
     parkingSlot: { slotNumber: 'KG-D3', location: 'QUT Kelvin Grove - Ring Road', pricePerHour: 3.80 },
-    startTime: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
-    endTime: new Date(Date.now() + 18000000).toISOString() // 5 hours from now
+    startTime: new Date(Date.now() + 7200000).toISOString(),
+    endTime: new Date(Date.now() + 18000000).toISOString(),
+    licensePlate: '456-ABC'
   }
 ];
 
@@ -80,4 +82,21 @@ export function getLocalBookings() {
 
 export function saveLocalBookings(bookings) {
   localStorage.setItem('local_bookings', JSON.stringify(bookings));
+}
+
+export function getRegisteredVehicles() {
+  const stored = localStorage.getItem('registered_vehicles');
+  if (!stored) {
+    const defaultVehicles = [
+      { id: 'v1', model: 'Tesla Model 3', color: 'White', plate: 'QUT-999' },
+      { id: 'v2', model: 'Audi Q7', color: 'Black', plate: '456-ABC' }
+    ];
+    localStorage.setItem('registered_vehicles', JSON.stringify(defaultVehicles));
+    return defaultVehicles;
+  }
+  return JSON.parse(stored);
+}
+
+export function saveRegisteredVehicles(vehicles) {
+  localStorage.setItem('registered_vehicles', JSON.stringify(vehicles));
 }

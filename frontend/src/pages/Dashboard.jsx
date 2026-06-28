@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getLocalSlots, saveLocalSlots, getLocalBookings, saveLocalBookings } from '../utils/localDb';
+import { getLocalSlots, saveLocalSlots, getLocalBookings, saveLocalBookings, getRegisteredVehicles } from '../utils/localDb';
 
 export default function Dashboard() {
   const { user, localMode } = useAuth();
@@ -11,6 +11,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [bookingSlot, setBookingSlot] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+
+  useEffect(() => {
+    if (bookingSlot) {
+      const list = getRegisteredVehicles();
+      setVehicles(list);
+      if (list.length > 0) {
+        setSelectedVehicle(list[0].plate);
+      } else {
+        setSelectedVehicle('');
+      }
+    }
+  }, [bookingSlot]);
 
   const getSlotCategory = (location) => {
     if (!location) return { label: 'Unknown', className: 'badge-muted' };
@@ -109,7 +124,8 @@ export default function Dashboard() {
           pricePerHour: bookingSlot.pricePerHour
         },
         startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString()
+        endTime: endDateTime.toISOString(),
+        licensePlate: selectedVehicle
       };
       saveLocalBookings([...allBookings, newBooking]);
 
@@ -127,7 +143,8 @@ export default function Dashboard() {
           {
             parkingSlotId: bookingSlot._id,
             startTime: startDateTime,
-            endTime: endDateTime
+            endTime: endDateTime,
+            licensePlate: selectedVehicle
           },
           {
             headers: { Authorization: `Bearer ${user.token}` }
@@ -333,6 +350,35 @@ export default function Dashboard() {
                     className="input"
                   />
                 </div>
+              </div>
+
+              <div className="input-group" style={{ marginTop: 12 }}>
+                <label className="input-label">Select Vehicle</label>
+                <select
+                  value={selectedVehicle}
+                  onChange={(e) => setSelectedVehicle(e.target.value)}
+                  className="input"
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-primary)',
+                    padding: '10px',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}
+                  required
+                >
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.plate} style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                      🚗 {v.color} {v.model} ({v.plate})
+                    </option>
+                  ))}
+                  {vehicles.length === 0 && (
+                    <option value="" disabled>No vehicles registered. Go to Profile.</option>
+                  )}
+                </select>
               </div>
 
               {/* Duration preview */}

@@ -247,6 +247,22 @@ export default function MyBookings() {
                     <span className="info-row-text">Time</span>
                     <span className="info-row-value">{displayTime(booking.startTime)} → {displayTime(booking.endTime)}</span>
                   </div>
+                  {booking.licensePlate && (
+                    <div className="info-row">
+                      <div className="info-row-icon">🚗</div>
+                      <span className="info-row-text">Vehicle</span>
+                      <span className="info-row-value" style={{
+                        background: '#f1f1f5',
+                        color: '#0a0a0f',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        padding: '1px 6px',
+                        borderRadius: '3px',
+                        letterSpacing: '0.05em',
+                        border: '1px solid #c0c0d8'
+                      }}>{booking.licensePlate}</span>
+                    </div>
+                  )}
                   {slot.pricePerHour && (
                     <div className="info-row">
                       <div className="info-row-icon">💰</div>
