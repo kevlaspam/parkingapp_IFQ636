@@ -63,24 +63,18 @@ jobs:
           name: frontend-build
           path: frontend/build/
 
-      - name: Copy Frontend Build to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend/build"
-          target: "~/parkingapp_IFQ636"
-
-      - name: Deploy to EC2 via SSH
+      - name: Prepare EC2 Directory & Pull Code via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Navigate to the project directory
-            cd ~/parkingapp_IFQ636
+            # 1. Clone the project if it doesn't exist
+            if [ ! -d "$HOME/parkingapp_IFQ636" ]; then
+              git clone https://github.com/kevlaspam/parkingapp_IFQ636.git "$HOME/parkingapp_IFQ636"
+            fi
+            cd "$HOME/parkingapp_IFQ636"
             
             # 2. Reset and pull latest code
             git reset --hard
@@ -94,9 +88,25 @@ jobs:
             # 4. Install backend dependencies
             cd backend
             npm install
-            
-            # 5. Stop and restart PM2 services
+
+      - name: Copy Frontend Build to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "frontend/build"
+          target: "~/parkingapp_IFQ636"
+
+      - name: Restart PM2 Services via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd "$HOME/parkingapp_IFQ636"
             npx pm2 stop all || true
-            npx pm2 start server.js --name "parking-backend" || npx pm2 restart "parking-backend"
-            npx pm2 start npx --name "parking-frontend" -- serve -s ../frontend/build -l 3000 || npx pm2 restart "parking-frontend"
+            npx pm2 start backend/server.js --name "parking-backend" || npx pm2 restart "parking-backend"
+            npx pm2 start npx --name "parking-frontend" -- serve -s frontend/build -l 3000 || npx pm2 restart "parking-frontend"
             npx pm2 save
