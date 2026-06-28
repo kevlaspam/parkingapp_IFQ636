@@ -27,7 +27,7 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd backend
-          npm ci
+          npm install
 
       - name: Run Backend Mocha/Chai Tests
         run: |
@@ -40,7 +40,7 @@ jobs:
           CI: false
         run: |
           cd frontend
-          npm ci
+          npm install
           npm run build
 
       - name: Upload Build Artifact
