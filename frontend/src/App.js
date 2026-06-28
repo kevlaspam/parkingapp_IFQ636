@@ -52,45 +52,102 @@ function AppContent() {
         {/* Local Test Mode Toggle Banner */}
         {user && (
           <div style={{
-            background: localMode ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.03)',
-            borderBottom: '1px solid ' + (localMode ? 'rgba(245, 158, 11, 0.25)' : 'var(--border)'),
-            padding: '10px 16px',
+            background: 'var(--bg-card)',
+            borderBottom: '1px solid var(--border)',
+            padding: '12px 16px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '13px',
-            fontWeight: 600,
-            transition: 'all 0.3s ease',
-            color: localMode ? 'var(--amber)' : 'var(--text-secondary)',
+            flexDirection: 'column',
+            gap: '8px',
             zIndex: 10
           }}>
-            <span>🔌 {localMode ? 'Local Test Mode' : 'Online MongoDB'}</span>
-            <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
-              <input 
-                type="checkbox" 
-                checked={localMode} 
-                onChange={toggleLocalMode}
-                style={{ opacity: 0, width: 0, height: 0, cursor: 'pointer' }}
-              />
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              <span>Connection Status</span>
               <span style={{
-                position: 'absolute',
-                cursor: 'pointer',
-                top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: localMode ? 'var(--amber)' : '#444',
-                borderRadius: '34px',
-                transition: '.3s'
+                color: localMode ? 'var(--amber)' : 'var(--green)',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
               }}>
                 <span style={{
-                  position: 'absolute',
-                  height: '14px', width: '14px',
-                  left: localMode ? '18px' : '4px',
-                  bottom: '3px',
-                  backgroundColor: 'white',
+                  width: '6px',
+                  height: '6px',
                   borderRadius: '50%',
-                  transition: '.3s'
+                  background: localMode ? 'var(--amber)' : 'var(--green)',
+                  display: 'inline-block',
+                  boxShadow: localMode ? '0 0 8px var(--amber)' : '0 0 8px var(--green)'
                 }} />
+                {localMode ? 'Offline Demo Mode' : 'Connected to MongoDB'}
               </span>
-            </label>
+            </div>
+
+            {/* Segmented Switch Bar */}
+            <div style={{
+              background: 'var(--bg-input)',
+              borderRadius: '12px',
+              padding: '4px',
+              display: 'flex',
+              position: 'relative',
+              border: '1px solid var(--border)'
+            }}>
+              <button
+                type="button"
+                onClick={() => { if (localMode) toggleLocalMode(); }}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 0',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: !localMode ? 'var(--accent)' : 'transparent',
+                  color: !localMode ? 'var(--text-primary)' : 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: !localMode ? '0 4px 12px var(--accent-glow)' : 'none',
+                  outline: 'none'
+                }}
+              >
+                <span>☁️</span> Live MongoDB
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (!localMode) toggleLocalMode(); }}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 0',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: localMode ? 'var(--amber)' : 'transparent',
+                  color: localMode ? '#0a0a0f' : 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: localMode ? '0 4px 12px rgba(245, 158, 11, 0.25)' : 'none',
+                  outline: 'none'
+                }}
+              >
+                <span>🔌</span> Local Demo
+              </button>
+            </div>
           </div>
         )}
 
