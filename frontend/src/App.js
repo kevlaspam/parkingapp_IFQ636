@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css';
 import Navbar from './components/Navbar';
@@ -15,11 +16,73 @@ function getCurrentTime() {
 }
 
 function AppContent() {
-  const { user, localMode, toggleLocalMode } = useAuth();
+  const { user } = useAuth();
+  const [deviceFormat, setDeviceFormat] = useState('mobile');
 
   return (
-    <div className="app-shell">
-      <div className="phone-frame">
+    <div className="app-shell" style={{ paddingTop: '80px' }}>
+      {/* Device Format Selector (Fixed at the top of the screen) */}
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-bright)',
+        borderRadius: '20px',
+        padding: '4px',
+        display: 'flex',
+        gap: '4px',
+        width: '180px',
+        zIndex: 9999,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(8px)'
+      }}>
+        <button
+          onClick={() => setDeviceFormat('mobile')}
+          style={{
+            flex: 1,
+            background: deviceFormat === 'mobile' ? 'rgba(124,58,237,0.2)' : 'transparent',
+            border: 'none',
+            borderRadius: '16px',
+            color: deviceFormat === 'mobile' ? 'var(--accent-light)' : 'var(--text-muted)',
+            padding: '6px 0',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            outline: 'none'
+          }}
+        >
+          📱 Mobile
+        </button>
+        <button
+          onClick={() => setDeviceFormat('tablet')}
+          style={{
+            flex: 1,
+            background: deviceFormat === 'tablet' ? 'rgba(124,58,237,0.2)' : 'transparent',
+            border: 'none',
+            borderRadius: '16px',
+            color: deviceFormat === 'tablet' ? 'var(--accent-light)' : 'var(--text-muted)',
+            padding: '6px 0',
+            fontSize: '11px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            outline: 'none'
+          }}
+        >
+          📟 Tablet
+        </button>
+      </div>
+
+      <div 
+        className="phone-frame"
+        style={{
+          maxWidth: deviceFormat === 'tablet' ? '768px' : '390px',
+          borderRadius: deviceFormat === 'tablet' ? '28px' : '44px'
+        }}
+      >
         {/* Dynamic Island */}
         <div className="phone-island">
           <div className="phone-island-camera"></div>
@@ -49,107 +112,7 @@ function AppContent() {
           </div>
         </div>
 
-        {/* Local Test Mode Toggle Banner */}
-        {user && (
-          <div style={{
-            background: 'var(--bg-card)',
-            borderBottom: '1px solid var(--border)',
-            padding: '12px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            zIndex: 10
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '10px',
-              fontWeight: 700,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              <span>Connection Status</span>
-              <span style={{
-                color: localMode ? 'var(--amber)' : 'var(--green)',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}>
-                <span style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: localMode ? 'var(--amber)' : 'var(--green)',
-                  display: 'inline-block',
-                  boxShadow: localMode ? '0 0 8px var(--amber)' : '0 0 8px var(--green)'
-                }} />
-                {localMode ? 'Offline Demo Mode' : 'Connected to MongoDB'}
-              </span>
-            </div>
 
-            {/* Segmented Switch Bar */}
-            <div style={{
-              background: 'var(--bg-input)',
-              borderRadius: '12px',
-              padding: '4px',
-              display: 'flex',
-              position: 'relative',
-              border: '1px solid var(--border)'
-            }}>
-              <button
-                type="button"
-                onClick={() => { if (localMode) toggleLocalMode(); }}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '8px 0',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  background: !localMode ? 'var(--accent)' : 'transparent',
-                  color: !localMode ? 'var(--text-primary)' : 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: !localMode ? '0 4px 12px var(--accent-glow)' : 'none',
-                  outline: 'none'
-                }}
-              >
-                <span>☁️</span> Live MongoDB
-              </button>
-              <button
-                type="button"
-                onClick={() => { if (!localMode) toggleLocalMode(); }}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '8px 0',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  background: localMode ? 'var(--amber)' : 'transparent',
-                  color: localMode ? '#0a0a0f' : 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: localMode ? '0 4px 12px rgba(245, 158, 11, 0.25)' : 'none',
-                  outline: 'none'
-                }}
-              >
-                <span>🔌</span> Local Demo
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Main scrollable content */}
         <div className="page-content">

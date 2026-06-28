@@ -100,3 +100,23 @@ export function getRegisteredVehicles() {
 export function saveRegisteredVehicles(vehicles) {
   localStorage.setItem('registered_vehicles', JSON.stringify(vehicles));
 }
+
+export function getSavedPaymentMethod() {
+  const stored = localStorage.getItem('saved_payment_method');
+  if (!stored) {
+    const defaultCard = {
+      cardholderName: 'John Doe',
+      cardNumber: '4242 4242 4242 4242',
+      expiryDate: '12/29',
+      cvv: '123',
+      cardType: 'Visa'
+    };
+    localStorage.setItem('saved_payment_method', JSON.stringify(defaultCard));
+    return defaultCard;
+  }
+  return JSON.parse(stored);
+}
+
+export function savePaymentMethod(card) {
+  localStorage.setItem('saved_payment_method', JSON.stringify(card));
+}
