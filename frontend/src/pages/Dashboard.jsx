@@ -50,11 +50,9 @@ export default function Dashboard() {
   };
   const todayString = getLocalDateString();
 
-  const [bookingDetails, setBookingDetails] = useState({
-    date: todayString,
-    startTime: '09:00',
-    endTime: '12:00'
-  });
+  const [searchDate, setSearchDate] = useState(todayString);
+  const [searchStartTime, setSearchStartTime] = useState('09:00');
+  const [searchEndTime, setSearchEndTime] = useState('12:00');
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -68,7 +66,20 @@ export default function Dashboard() {
       setLoading(true);
       if (localMode) {
         const allSlots = getLocalSlots();
-        const available = allSlots.filter(s => s.isAvailable);
+        const startFilter = new Date(`${searchDate}T${searchStartTime}:00`);
+        const endFilter = new Date(`${searchDate}T${searchEndTime}:00`);
+        const allBookings = getLocalBookings();
+
+        const available = allSlots.filter(slot => {
+          const hasOverlap = allBookings.some(b => {
+            if (b.parkingSlot.slotNumber !== slot.slotNumber) return false;
+            const bStart = new Date(b.startTime);
+            const bEnd = new Date(b.endTime);
+            return bStart < endFilter && startFilter < bEnd;
+          });
+          return !hasOverlap;
+        });
+
         setSlots(available);
         setLoading(false);
       } else {
@@ -86,14 +97,14 @@ export default function Dashboard() {
     };
 
     fetchSlots();
-  }, [user, navigate, localMode]);
+  }, [user, navigate, localMode, searchDate, searchStartTime, searchEndTime]);
 
   const handleConfirmBooking = async (e) => {
     e.preventDefault();
     if (!bookingSlot) return;
 
-    const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}:00`);
-    const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}:00`);
+    const startDateTime = new Date(`${searchDate}T${searchStartTime}:00`);
+    const endDateTime = new Date(`${searchDate}T${searchEndTime}:00`);
 
     const now = new Date();
     if (startDateTime < now) {
@@ -229,6 +240,47 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Schedule filter bar */}
+      <div style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '12px 16px',
+        margin: '0 16px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+      }}>
+        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+          📅 Select Booking Schedule
+        </p>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="date"
+            min={todayString}
+            value={searchDate}
+            onChange={(e) => setSearchDate(e.target.value)}
+            className="input"
+            style={{ flex: 1.3, padding: '8px 10px', fontSize: '12px', height: '36px', background: 'var(--bg-input)' }}
+          />
+          <input
+            type="time"
+            value={searchStartTime}
+            onChange={(e) => setSearchStartTime(e.target.value)}
+            className="input"
+            style={{ flex: 1, padding: '8px 10px', fontSize: '12px', height: '36px', background: 'var(--bg-input)' }}
+          />
+          <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>→</span>
+          <input
+            type="time"
+            value={searchEndTime}
+            onChange={(e) => setSearchEndTime(e.target.value)}
+            className="input"
+            style={{ flex: 1, padding: '8px 10px', fontSize: '12px', height: '36px', background: 'var(--bg-input)' }}
+          />
+        </div>
+      </div>
+
       {/* Campus Filtering Tabs */}
       <div className="filter-tabs" style={{ display: 'flex', gap: 8, margin: '14px 0', overflowX: 'auto', paddingBottom: 4 }}>
         {[
@@ -323,8 +375,8 @@ export default function Dashboard() {
                   type="date"
                   required
                   min={todayString}
-                  value={bookingDetails.date}
-                  onChange={(e) => setBookingDetails({ ...bookingDetails, date: e.target.value })}
+                  value={searchDate}
+                  onChange={(e) => setSearchDate(e.target.value)}
                   className="input"
                 />
               </div>
@@ -335,8 +387,8 @@ export default function Dashboard() {
                   <input
                     type="time"
                     required
-                    value={bookingDetails.startTime}
-                    onChange={(e) => setBookingDetails({ ...bookingDetails, startTime: e.target.value })}
+                    value={searchStartTime}
+                    onChange={(e) => setSearchStartTime(e.target.value)}
                     className="input"
                   />
                 </div>
@@ -345,8 +397,8 @@ export default function Dashboard() {
                   <input
                     type="time"
                     required
-                    value={bookingDetails.endTime}
-                    onChange={(e) => setBookingDetails({ ...bookingDetails, endTime: e.target.value })}
+                    value={searchEndTime}
+                    onChange={(e) => setSearchEndTime(e.target.value)}
                     className="input"
                   />
                 </div>
@@ -382,7 +434,7 @@ export default function Dashboard() {
               </div>
 
               {/* Duration preview */}
-              {bookingDetails.startTime && bookingDetails.endTime && (
+              {searchStartTime && searchEndTime && (
                 <div style={{
                   background: 'var(--accent-dim)',
                   border: '1px solid rgba(124,58,237,0.2)',
@@ -397,8 +449,8 @@ export default function Dashboard() {
                   <span style={{ color: 'var(--text-muted)' }}>Estimated duration</span>
                   <span style={{ color: 'var(--accent-light)', fontWeight: 700 }}>
                     {(() => {
-                      const [sh, sm] = bookingDetails.startTime.split(':').map(Number);
-                      const [eh, em] = bookingDetails.endTime.split(':').map(Number);
+                      const [sh, sm] = searchStartTime.split(':').map(Number);
+                      const [eh, em] = searchEndTime.split(':').map(Number);
                       const diff = (eh * 60 + em) - (sh * 60 + sm);
                       if (diff <= 0) return '—';
                       const h = Math.floor(diff / 60);
