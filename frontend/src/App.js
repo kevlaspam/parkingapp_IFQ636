@@ -15,7 +15,7 @@ function getCurrentTime() {
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, localMode, toggleLocalMode } = useAuth();
 
   return (
     <div className="app-shell">
@@ -48,6 +48,51 @@ function AppContent() {
             </svg>
           </div>
         </div>
+
+        {/* Local Test Mode Toggle Banner */}
+        {user && (
+          <div style={{
+            background: localMode ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255,255,255,0.03)',
+            borderBottom: '1px solid ' + (localMode ? 'rgba(245, 158, 11, 0.25)' : 'var(--border)'),
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '13px',
+            fontWeight: 600,
+            transition: 'all 0.3s ease',
+            color: localMode ? 'var(--amber)' : 'var(--text-secondary)',
+            zIndex: 10
+          }}>
+            <span>🔌 {localMode ? 'Local Test Mode' : 'Online MongoDB'}</span>
+            <label style={{ position: 'relative', display: 'inline-block', width: '36px', height: '20px' }}>
+              <input 
+                type="checkbox" 
+                checked={localMode} 
+                onChange={toggleLocalMode}
+                style={{ opacity: 0, width: 0, height: 0, cursor: 'pointer' }}
+              />
+              <span style={{
+                position: 'absolute',
+                cursor: 'pointer',
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: localMode ? 'var(--amber)' : '#444',
+                borderRadius: '34px',
+                transition: '.3s'
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  height: '14px', width: '14px',
+                  left: localMode ? '18px' : '4px',
+                  bottom: '3px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  transition: '.3s'
+                }} />
+              </span>
+            </label>
+          </div>
+        )}
 
         {/* Main scrollable content */}
         <div className="page-content">

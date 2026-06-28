@@ -3,9 +3,10 @@ import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, ArrowLeft, Shield, X } from 'lucide-react';
+import { getLocalSlots, saveLocalSlots } from '../utils/localDb';
 
 export default function AdminPanel() {
-  const { user } = useAuth();
+  const { user, localMode } = useAuth();
   const navigate = useNavigate();
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,20 +26,26 @@ export default function AdminPanel() {
     }
 
     const fetchAllSlots = async () => {
-      try {
-        const res = await axiosInstance.get('/api/slots', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        setSlots(res.data);
-      } catch (err) {
-        console.error('Error fetching admin slots:', err);
-      } finally {
+      setLoading(true);
+      if (localMode) {
+        setSlots(getLocalSlots());
         setLoading(false);
+      } else {
+        try {
+          const res = await axiosInstance.get('/api/slots', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          setSlots(res.data);
+        } catch (err) {
+          console.error('Error fetching admin slots:', err);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
     fetchAllSlots();
-  }, [user, navigate]);
+  }, [user, navigate, localMode]);
 
   const handleOpenAdd = () => {
     setIsEditing(null);
@@ -65,47 +72,78 @@ export default function AdminPanel() {
       pricePerHour: Number(pricePerHour)
     };
 
-    try {
+    if (localMode) {
+      const allSlots = getLocalSlots();
       if (isEditing) {
-        // Update slot
-        const res = await axiosInstance.put(
-          `/api/slots/${isEditing._id}`,
-          slotData,
-          {
-            headers: { Authorization: `Bearer ${user.token}` }
-          }
+        const updated = allSlots.map(s =>
+          s._id === isEditing._id ? { ...s, ...slotData } : s
         );
-        setSlots(slots.map(s => s._id === isEditing._id ? res.data : s));
-        alert('Slot updated successfully.');
+        saveLocalSlots(updated);
+        setSlots(updated);
+        alert('Slot updated successfully (Local Mode).');
       } else {
-        // Create slot
-        const res = await axiosInstance.post(
-          '/api/slots',
-          slotData,
-          {
-            headers: { Authorization: `Bearer ${user.token}` }
-          }
-        );
-        setSlots([...slots, res.data]);
-        alert('Slot created successfully.');
+        const newSlot = {
+          _id: 'local-slot-' + Date.now(),
+          ...slotData,
+          isAvailable: true
+        };
+        const updated = [...allSlots, newSlot];
+        saveLocalSlots(updated);
+        setSlots(updated);
+        alert('Slot created successfully (Local Mode).');
       }
       setModalOpen(false);
-    } catch (err) {
-      alert(err.response?.data?.message || 'Operation failed.');
+    } else {
+      try {
+        if (isEditing) {
+          // Update slot
+          const res = await axiosInstance.put(
+            `/api/slots/${isEditing._id}`,
+            slotData,
+            {
+              headers: { Authorization: `Bearer ${user.token}` }
+            }
+          );
+          setSlots(slots.map(s => s._id === isEditing._id ? res.data : s));
+          alert('Slot updated successfully.');
+        } else {
+          // Create slot
+          const res = await axiosInstance.post(
+            '/api/slots',
+            slotData,
+            {
+              headers: { Authorization: `Bearer ${user.token}` }
+            }
+          );
+          setSlots([...slots, res.data]);
+          alert('Slot created successfully.');
+        }
+        setModalOpen(false);
+      } catch (err) {
+        alert(err.response?.data?.message || 'Operation failed.');
+      }
     }
   };
 
   const handleDeleteSlot = async (slotId) => {
     if (!window.confirm('Are you sure you want to delete this parking slot? All associated bookings will be removed.')) return;
 
-    try {
-      await axiosInstance.delete(`/api/slots/${slotId}`, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      setSlots(slots.filter(s => s._id !== slotId));
-      alert('Slot removed successfully.');
-    } catch (err) {
-      alert('Failed to remove slot.');
+    if (localMode) {
+      const allSlots = getLocalSlots();
+      const updated = allSlots.filter(s => s._id !== slotId);
+      saveLocalSlots(updated);
+      setSlots(updated);
+      alert('Slot removed successfully (Local Mode).');
+    } else {
+      try {
+        await axiosInstance.delete(`/api/slots/${slotId}`, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        setSlots(slots.filter(s => s._id !== slotId));
+        alert('Slot removed successfully.');
+      } catch (err) {
+        alert('Failed to remove slot.');
+      }
     }
   };
 

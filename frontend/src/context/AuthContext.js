@@ -4,6 +4,9 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [localMode, setLocalMode] = useState(() => {
+    return localStorage.getItem('local_test_mode') === 'true';
+  });
 
   const login = (userData) => {
     setUser(userData);
@@ -13,8 +16,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const toggleLocalMode = () => {
+    const nextVal = !localMode;
+    setLocalMode(nextVal);
+    localStorage.setItem('local_test_mode', String(nextVal));
+    window.dispatchEvent(new Event('localModeChanged'));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, localMode, toggleLocalMode }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getLocalSlots, saveLocalSlots, getLocalBookings, saveLocalBookings } from '../utils/localDb';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, localMode } = useAuth();
   const navigate = useNavigate();
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,63 +50,102 @@ export default function Dashboard() {
     }
 
     const fetchSlots = async () => {
-      try {
-        const res = await axiosInstance.get('/api/slots/available', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        setSlots(res.data);
-      } catch (err) {
-        console.error('Error fetching slots:', err);
-      } finally {
+      setLoading(true);
+      if (localMode) {
+        const allSlots = getLocalSlots();
+        const available = allSlots.filter(s => s.isAvailable);
+        setSlots(available);
         setLoading(false);
+      } else {
+        try {
+          const res = await axiosInstance.get('/api/slots/available', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          setSlots(res.data);
+        } catch (err) {
+          console.error('Error fetching slots:', err);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
     fetchSlots();
-  }, [user, navigate]);
+  }, [user, navigate, localMode]);
 
   const handleConfirmBooking = async (e) => {
     e.preventDefault();
     if (!bookingSlot) return;
 
-    try {
-      const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}:00`);
-      const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}:00`);
+    const startDateTime = new Date(`${bookingDetails.date}T${bookingDetails.startTime}:00`);
+    const endDateTime = new Date(`${bookingDetails.date}T${bookingDetails.endTime}:00`);
 
-      const now = new Date();
-      if (startDateTime < now) {
-        setToast('⚠️ Start time must be in the future!');
-        setTimeout(() => setToast(null), 3000);
-        return;
-      }
-      if (endDateTime <= startDateTime) {
-        setToast('⚠️ End time must be after start time!');
-        setTimeout(() => setToast(null), 3000);
-        return;
-      }
+    const now = new Date();
+    if (startDateTime < now) {
+      setToast('⚠️ Start time must be in the future!');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    if (endDateTime <= startDateTime) {
+      setToast('⚠️ End time must be after start time!');
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-      await axiosInstance.post(
-        '/api/bookings',
-        {
-          parkingSlotId: bookingSlot._id,
-          startTime: startDateTime,
-          endTime: endDateTime
-        },
-        {
-          headers: { Authorization: `Bearer ${user.token}` }
-        }
+    if (localMode) {
+      const allSlots = getLocalSlots();
+      const updatedSlots = allSlots.map(s =>
+        s._id === bookingSlot._id ? { ...s, isAvailable: false } : s
       );
+      saveLocalSlots(updatedSlots);
+
+      const allBookings = getLocalBookings();
+      const newBooking = {
+        _id: 'local-booking-' + Date.now(),
+        user: user.id || 'student-built-in',
+        parkingSlot: {
+          slotNumber: bookingSlot.slotNumber,
+          location: bookingSlot.location,
+          pricePerHour: bookingSlot.pricePerHour
+        },
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString()
+      };
+      saveLocalBookings([...allBookings, newBooking]);
 
       setBookingSlot(null);
       setSlots(slots.filter(s => s._id !== bookingSlot._id));
-
-      setToast(`✓ Slot ${bookingSlot.slotNumber} reserved!`);
+      setToast('🎉 Parking slot booked successfully (Local Mode)!');
       setTimeout(() => {
         setToast(null);
         navigate('/bookings');
       }, 2000);
-    } catch (err) {
-      alert(err.response?.data?.message || 'Booking failed.');
+    } else {
+      try {
+        await axiosInstance.post(
+          '/api/bookings',
+          {
+            parkingSlotId: bookingSlot._id,
+            startTime: startDateTime,
+            endTime: endDateTime
+          },
+          {
+            headers: { Authorization: `Bearer ${user.token}` }
+          }
+        );
+
+        setBookingSlot(null);
+        setSlots(slots.filter(s => s._id !== bookingSlot._id));
+
+        setToast(`✓ Slot ${bookingSlot.slotNumber} reserved!`);
+        setTimeout(() => {
+          setToast(null);
+          navigate('/bookings');
+        }, 2000);
+      } catch (err) {
+        setToast('⚠️ ' + (err.response?.data?.message || 'Booking failed.'));
+        setTimeout(() => setToast(null), 3000);
+      }
     }
   };
 

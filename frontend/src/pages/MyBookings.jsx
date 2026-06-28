@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getLocalBookings, saveLocalBookings, getLocalSlots, saveLocalSlots } from '../utils/localDb';
 
 export default function MyBookings() {
-  const { user } = useAuth();
+  const { user, localMode } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,20 +21,28 @@ export default function MyBookings() {
     }
 
     const fetchBookings = async () => {
-      try {
-        const res = await axiosInstance.get('/api/bookings', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        setBookings(res.data);
-      } catch (err) {
-        console.error('Error fetching bookings:', err);
-      } finally {
+      setLoading(true);
+      if (localMode) {
+        const allBookings = getLocalBookings();
+        const userBookings = allBookings.filter(b => b.user === user.id || b.user === 'student-built-in');
+        setBookings(userBookings);
         setLoading(false);
+      } else {
+        try {
+          const res = await axiosInstance.get('/api/bookings', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          setBookings(res.data);
+        } catch (err) {
+          console.error('Error fetching bookings:', err);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
     fetchBookings();
-  }, [user, navigate]);
+  }, [user, navigate, localMode]);
 
   const showToast = (msg, isError = false) => {
     setToast({ msg, isError });
@@ -41,14 +50,31 @@ export default function MyBookings() {
   };
 
   const handleCancelBooking = async (bookingId) => {
-    try {
-      await axiosInstance.delete(`/api/bookings/${bookingId}`, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+    if (localMode) {
+      const allBookings = getLocalBookings();
+      const bookingToCancel = allBookings.find(b => b._id === bookingId);
+      if (bookingToCancel) {
+        const allSlots = getLocalSlots();
+        const updatedSlots = allSlots.map(s =>
+          s.slotNumber === bookingToCancel.parkingSlot.slotNumber ? { ...s, isAvailable: true } : s
+        );
+        saveLocalSlots(updatedSlots);
+      }
+
+      const updatedBookings = allBookings.filter(b => b._id !== bookingId);
+      saveLocalBookings(updatedBookings);
       setBookings(bookings.filter(b => b._id !== bookingId));
       showToast('Booking cancelled');
-    } catch (err) {
-      showToast('Failed to cancel booking', true);
+    } else {
+      try {
+        await axiosInstance.delete(`/api/bookings/${bookingId}`, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        setBookings(bookings.filter(b => b._id !== bookingId));
+        showToast('Booking cancelled');
+      } catch (err) {
+        showToast('Failed to cancel booking', true);
+      }
     }
   };
 
@@ -84,19 +110,37 @@ export default function MyBookings() {
         return;
       }
 
-      const res = await axiosInstance.put(
-        `/api/bookings/${editingBooking._id}`,
-        { startTime: startDateTime, endTime: endDateTime },
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
+      if (localMode) {
+        const allBookings = getLocalBookings();
+        const updatedBookings = allBookings.map(b =>
+          b._id === editingBooking._id
+            ? { ...b, startTime: startDateTime.toISOString(), endTime: endDateTime.toISOString() }
+            : b
+        );
+        saveLocalBookings(updatedBookings);
 
-      setBookings(bookings.map(b =>
-        b._id === editingBooking._id
-          ? { ...b, startTime: res.data.startTime, endTime: res.data.endTime }
-          : b
-      ));
-      setEditingBooking(null);
-      showToast('Booking updated!');
+        setBookings(bookings.map(b =>
+          b._id === editingBooking._id
+            ? { ...b, startTime: startDateTime.toISOString(), endTime: endDateTime.toISOString() }
+            : b
+        ));
+        setEditingBooking(null);
+        showToast('Booking updated!');
+      } else {
+        const res = await axiosInstance.put(
+          `/api/bookings/${editingBooking._id}`,
+          { startTime: startDateTime, endTime: endDateTime },
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
+
+        setBookings(bookings.map(b =>
+          b._id === editingBooking._id
+            ? { ...b, startTime: res.data.startTime, endTime: res.data.endTime }
+            : b
+        ));
+        setEditingBooking(null);
+        showToast('Booking updated!');
+      }
     } catch (err) {
       showToast(err.response?.data?.message || 'Failed to update', true);
     }
