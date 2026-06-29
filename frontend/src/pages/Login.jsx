@@ -7,7 +7,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, forceLocalMode } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,6 +21,7 @@ const Login = () => {
     // Check for hardcoded admin/admin login
     if (emailVal.toLowerCase() === 'admin' && passwordVal === 'admin') {
       setTimeout(() => {
+        forceLocalMode();
         login({
           id: 'admin-built-in',
           name: 'System Admin',
@@ -37,6 +38,7 @@ const Login = () => {
     // Check for hardcoded student/student login
     if (emailVal.toLowerCase() === 'student' && passwordVal === 'student') {
       setTimeout(() => {
+        forceLocalMode();
         login({
           id: 'student-built-in',
           name: 'Student User',

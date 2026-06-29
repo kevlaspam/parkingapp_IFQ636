@@ -23,8 +23,15 @@ export const AuthProvider = ({ children }) => {
     window.dispatchEvent(new Event('localModeChanged'));
   };
 
+  // Force local mode on — used by built-in demo accounts (admin/admin, student/student)
+  const forceLocalMode = () => {
+    setLocalMode(true);
+    localStorage.setItem('local_test_mode', 'true');
+    window.dispatchEvent(new Event('localModeChanged'));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, localMode, toggleLocalMode }}>
+    <AuthContext.Provider value={{ user, login, logout, localMode, toggleLocalMode, forceLocalMode }}>
       {children}
     </AuthContext.Provider>
   );
