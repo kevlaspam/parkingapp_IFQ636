@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -6,7 +7,13 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [showLogoutSheet, setShowLogoutSheet] = useState(false);
+
   const handleLogout = () => {
+    setShowLogoutSheet(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     navigate('/login');
   };
@@ -61,6 +68,7 @@ const Navbar = () => {
   }
 
   return (
+    <>
     <nav className="bottom-nav">
       {tabs.map((tab) => {
         const active = location.pathname === tab.to;
@@ -82,7 +90,45 @@ const Navbar = () => {
         Out
       </button>
     </nav>
-  );
+
+    {showLogoutSheet && (
+      <div
+        className="modal-overlay"
+        onClick={() => setShowLogoutSheet(false)}
+      >
+        <div
+          className="bottom-sheet"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="sheet-handle"></div>
+
+          <h2 className="sheet-title">Sign Out?</h2>
+          <p className="sheet-subtitle">
+            Are you sure you want to sign out of ParkEase?
+          </p>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button
+              className="btn btn-secondary"
+              style={{ flex: 1 }}
+              onClick={() => setShowLogoutSheet(false)}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="btn btn-danger"
+              style={{ flex: 2 }}
+              onClick={confirmLogout}
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
 };
 
 export default Navbar;
