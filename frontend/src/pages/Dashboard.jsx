@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState('');
 
+  const [showBookingSummary, setShowBookingSummary] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'processing' | 'success'
   const [savedCard, setSavedCard] = useState({ cardholderName: '', cardNumber: '', expiryDate: '', cvv: '' });
@@ -123,8 +124,13 @@ export default function Dashboard() {
       return;
     }
 
+    setShowBookingSummary(true);
+  };
+
+  const handleProceedToPayment = () => {
     setSavedCard(getSavedPaymentMethod());
     setPaymentStatus('idle');
+    setShowBookingSummary(false);
     setShowPayment(true);
   };
 
@@ -579,6 +585,93 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+{/* Booking Summary Bottom Sheet */}
+{showBookingSummary && bookingSlot && (
+  <div
+    className="modal-overlay"
+    style={{ zIndex: 900 }}
+    onClick={(e) => {
+      if (e.target === e.currentTarget) setShowBookingSummary(false);
+    }}
+  >
+    <div className="bottom-sheet">
+      <div className="sheet-handle"></div>
+
+      <h2 className="sheet-title">Booking Summary</h2>
+      <p className="sheet-subtitle">Review your reservation before payment.</p>
+
+      <div className="booking-card-body" style={{ padding: 0 }}>
+        <div className="info-row">
+          <div className="info-row-icon">🅿️</div>
+          <span className="info-row-text">Slot</span>
+          <span className="info-row-value">{bookingSlot.slotNumber}</span>
+        </div>
+
+        <div className="info-row">
+          <div className="info-row-icon">📅</div>
+          <span className="info-row-text">Date</span>
+          <span className="info-row-value">
+            {new Date(searchDate).toLocaleDateString([], {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            })}
+          </span>
+        </div>
+
+        <div className="info-row">
+          <div className="info-row-icon">⏰</div>
+          <span className="info-row-text">Time</span>
+          <span className="info-row-value">
+            {searchStartTime} to {searchEndTime}
+          </span>
+        </div>
+
+        <div className="info-row">
+          <div className="info-row-icon">🚗</div>
+          <span className="info-row-text">Vehicle</span>
+          <span className="info-row-value">{selectedVehicle}</span>
+        </div>
+
+        <div className="divider"></div>
+
+        <div className="info-row">
+          <div className="info-row-icon">💰</div>
+          <span className="info-row-text">Estimated Cost</span>
+          <span className="info-row-value" style={{ color: 'var(--accent-light)' }}>
+            ${(() => {
+              const [sh, sm] = searchStartTime.split(':').map(Number);
+              const [eh, em] = searchEndTime.split(':').map(Number);
+              const hours = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
+              return (hours * bookingSlot.pricePerHour).toFixed(2);
+            })()}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+        <button
+          type="button"
+          onClick={() => setShowBookingSummary(false)}
+          className="btn btn-secondary"
+          style={{ flex: 1 }}
+        >
+          Back
+        </button>
+
+        <button
+          type="button"
+          onClick={handleProceedToPayment}
+          className="btn btn-primary"
+          style={{ flex: 2 }}
+        >
+          Proceed to Payment
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Payment Overlay Sheet */}
       {showPayment && (
