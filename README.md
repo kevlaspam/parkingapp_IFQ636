@@ -26,6 +26,22 @@
 
 ---
 
+## Development Workflow
+
+The project follows a Git feature branch workflow to support collaborative development.
+
+1. Create a dedicated feature branch.
+2. Implement and test changes locally.
+3. Commit changes using meaningful commit messages.
+4. Push the feature branch to GitHub.
+5. Create a Pull Request.
+6. GitHub Actions automatically validates the build and tests.
+7. Merge into the `main` branch following successful review and workflow completion.
+
+This workflow helps maintain a stable production branch while enabling concurrent feature development.
+
+---
+
 ## Features Implemented
 
 ### User Features (CRUD)
@@ -44,6 +60,17 @@
 - ✅ **Delete slots** — Remove slots from the system
 - ✅ **View all bookings** — Admin-level overview of all user bookings
 - ✅ **Database seeder** — Backend auto-seeds 10 parking slots on startup if the DB is empty
+
+---
+
+## Recent Improvements
+
+Recent enhancements include:
+
+- Added a booking summary screen before payment confirmation.
+- Added a logout confirmation bottom sheet to reduce accidental logouts on mobile devices.
+- Improved GitHub Actions workflow reliability through workflow permissions, concurrency control and execution timeouts.
+- Enhanced deployment reliability using automated GitHub Actions and PM2 process management.
 
 ---
 
@@ -131,12 +158,17 @@ parkingapp_IFQ636/
 
 Every push to `main` triggers the GitHub Actions workflow (`.github/workflows/ci.yml`):
 
-1. SSH into the AWS EC2 instance
-2. Pull latest code from GitHub
-3. Install backend dependencies (`npm install`)
-4. Build the React frontend (`npm run build`)
-5. Restart PM2 processes for backend and frontend
-6. App is live at the EC2 public IP on port 3000 (frontend) and 5001 (backend API)
+1. Checking out the repository.
+2. Installing backend dependencies.
+3. Executing backend Mocha/Chai unit tests.
+4. Building the React frontend.
+5. Uploading the frontend build as an artifact.
+6. Connecting securely to the AWS EC2 instance using SSH.
+7. Pulling the latest source code.
+8. Updating environment variables.
+9. Deploying the latest frontend build.
+10. Restarting PM2 services.
+
 
 ### Pipeline Run History
 
@@ -214,3 +246,7 @@ Live URL: `http://<EC2-PUBLIC-IP>:3000`
 - [x] Automated deployment to AWS EC2
 - [x] Unit/integration tests in `backend/tests/`
 - [x] Project documentation (this README)
+
+## License
+
+This project was developed for IFQ636 Software Lifecycle Measurement at Queensland University of Technology (QUT) and is intended for educational purposes.
