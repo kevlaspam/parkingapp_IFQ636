@@ -1,5 +1,7 @@
-const Booking = require('../models/Booking');
-const ParkingSlot = require('../models/ParkingSlot');
+const bookingRepo = require('../repositories/BookingRepository');
+const slotRepo = require('../repositories/ParkingSlotRepository');
+const bookingEmitter = require('../observers/BookingEventEmitter');
+const PricingContext = require('../strategies/PricingContext');
 
 // @desc    Create a booking
 // @route   POST /api/bookings
@@ -7,7 +9,8 @@ const ParkingSlot = require('../models/ParkingSlot');
 const createBooking = async (req, res) => {
     const { parkingSlotId, startTime, endTime } = req.body;
     try {
-        const slot = await ParkingSlot.findById(parkingSlotId);
+        // --- Repository Pattern: slot lookup via ParkingSlotRepository ---
+        const slot = await slotRepo.findById(parkingSlotId);
         if (!slot) {
             return res.status(404).json({ message: 'Parking slot not found' });
         }
@@ -15,29 +18,43 @@ const createBooking = async (req, res) => {
             return res.status(400).json({ message: 'Parking slot is already occupied' });
         }
 
-        const booking = await Booking.create({
+        // --- Strategy Pattern: calculate price using the appropriate pricing strategy ---
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        const durationHours = (end - start) / (1000 * 60 * 60);
+        const pricingContext = new PricingContext(slot);
+        const pricing = pricingContext.getPrice(durationHours);
+
+        // --- Repository Pattern: booking creation via BookingRepository ---
+        const booking = await bookingRepo.create({
             user: req.user.id,
             parkingSlot: parkingSlotId,
             startTime,
-            endTime
+            endTime,
         });
 
-        // Mark slot as unavailable
-        slot.isAvailable = false;
-        await slot.save();
+        // --- Observer Pattern: emit event; SlotAvailabilityObserver handles the side-effect ---
+        await bookingEmitter.notify('booking.created', { slot, booking });
 
-        res.status(201).json(booking);
+        const bookingData = typeof booking.toObject === 'function' ? booking.toObject() : booking;
+        res.status(201).json({
+            ...bookingData,
+            totalCost: pricing.totalCost,
+            strategyUsed: pricing.strategyUsed,
+            durationHours: pricing.durationHours,
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get user's active bookings
+// @desc    Get user's bookings
 // @route   GET /api/bookings
 // @access  Protected
 const getUserBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({ user: req.user.id }).populate('parkingSlot');
+        // --- Repository Pattern: query via BookingRepository ---
+        const bookings = await bookingRepo.findByUser(req.user.id);
         res.status(200).json(bookings);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -50,7 +67,8 @@ const getUserBookings = async (req, res) => {
 const updateBooking = async (req, res) => {
     const { startTime, endTime } = req.body;
     try {
-        const booking = await Booking.findById(req.params.id);
+        // --- Repository Pattern: lookup via BookingRepository ---
+        const booking = await bookingRepo.findById(req.params.id);
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
@@ -62,7 +80,8 @@ const updateBooking = async (req, res) => {
         booking.startTime = startTime || booking.startTime;
         booking.endTime = endTime || booking.endTime;
 
-        const updatedBooking = await booking.save();
+        // --- Repository Pattern: persist via BookingRepository ---
+        const updatedBooking = await bookingRepo.save(booking);
         res.status(200).json(updatedBooking);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -74,7 +93,8 @@ const updateBooking = async (req, res) => {
 // @access  Protected
 const deleteBooking = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.id);
+        // --- Repository Pattern: lookup via BookingRepository ---
+        const booking = await bookingRepo.findById(req.params.id);
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
@@ -83,14 +103,16 @@ const deleteBooking = async (req, res) => {
             return res.status(401).json({ message: 'User not authorized to cancel this booking' });
         }
 
-        // Release the slot
-        const slot = await ParkingSlot.findById(booking.parkingSlot);
+        // --- Repository Pattern: fetch slot via ParkingSlotRepository ---
+        const slot = await slotRepo.findById(booking.parkingSlot);
+
+        // --- Observer Pattern: emit event; SlotAvailabilityObserver restores availability ---
         if (slot) {
-            slot.isAvailable = true;
-            await slot.save();
+            await bookingEmitter.notify('booking.cancelled', { slot });
         }
 
-        await Booking.deleteOne({ _id: req.params.id });
+        // --- Repository Pattern: delete via BookingRepository ---
+        await bookingRepo.deleteById(req.params.id);
         res.status(200).json({ message: 'Booking cancelled and slot released' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -101,5 +123,5 @@ module.exports = {
     createBooking,
     getUserBookings,
     updateBooking,
-    deleteBooking
+    deleteBooking,
 };
