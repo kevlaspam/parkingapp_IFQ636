@@ -102,10 +102,10 @@ const Navbar = () => {
         >
           <div className="sheet-handle"></div>
 
-          <h2 className="sheet-title">Sign Out?</h2>
-          <p className="sheet-subtitle">
-            Are you sure you want to sign out of ParkEase?
-          </p>
+            <h2 className="sheet-title">Sign Out of ParkEase?</h2>
+            <p className="sheet-subtitle">
+              This will end your current session and return you to the login screen.
+            </p>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
             <button
