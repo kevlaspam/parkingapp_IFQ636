@@ -5,9 +5,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: parkease-production-deployment
+  cancel-in-progress: false
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout Code
@@ -56,6 +64,7 @@ jobs:
   deploy-to-ec2:
     runs-on: ubuntu-latest
     needs: build-and-test
+    timeout-minutes: 20
 
     steps:
       - name: Checkout Code
