@@ -1,11 +1,7 @@
 # ParkEase — Parking Slot Booking System
 
 **IFQ636 Assessment 1.2 — Full-Stack CRUD Application with DevOps Practices**
-<<<<<<< HEAD
-**Student:** Naidu
-=======
 **Student:** Naderian123
->>>>>>> 38561ea90f2735ed691746e5803023335bc5da0e
 **GitHub Repo:** [kevlaspam/parkingapp_IFQ636](https://github.com/kevlaspam/parkingapp_IFQ636)
 
 ---
